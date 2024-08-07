@@ -1,0 +1,143 @@
+segment .data  ;Variables for the lines
+        FirstLine dd 'Plain text: '  
+        FL_Length equ $ - FirstLine
+
+        SecondLine dd 'Key: '
+        SL_Length equ $ - SecondLine
+
+        Encrypt dd 'Encrypted text: '
+        encrypt_Length equ $ - Encrypt
+
+        Decrypt dd 'Decrypted text: '
+        decrypt_Length equ $ - Decrypt
+
+        NewLine dd 10      ;10 is the ASCII code for a new line
+
+        ;This is where the message and the key to encrypt and decrypt the message goes.
+        plainText dd 'CHESS_PUN' 
+        plain_Length equ $ - plainText
+        key dd 'which-one'
+        key_Length equ $ - key
+
+section .text
+        global _start
+
+_start:
+
+        mov eax, 4
+        mov ebx, 1
+        mov ecx, FirstLine              ;Prints 'Plain text: '
+        mov edx, FL_Length          
+        int 0x80
+
+        mov eax, 4
+        mov ebx, 1
+        mov ecx, plainText             ;After that prints, the message to encrypt.
+        mov edx, plain_Length
+        int 0x80
+
+        mov  edx, 1
+        mov  ecx, NewLine            ;Prints a new line
+        mov  ebx, 1
+        mov  eax, 4
+        int  0x80    
+
+        mov eax, 4
+        mov ebx, 1
+        mov ecx, SecondLine       ;Prints 'Key: '
+        mov edx, SL_Length
+        int 0x80
+
+        mov eax, 4
+        mov ebx, 1
+        mov ecx, key                     ;Prints the key to encrypt the message
+        mov edx, key_Length
+        int 0x80
+
+        mov  edx, 1
+        mov  ecx, NewLine           ;Prints a new line
+        mov  ebx, 1
+        mov  eax, 4
+        int  0x80    
+
+        mov eax, 4
+        mov ebx, 1
+        mov ecx, Encrypt
+        mov edx, encrypt_Length  ;Prints 'Encrypted text'
+        int 0x80
+
+        mov  ecx, plain_Length      ;Number of characters to encrypt
+
+encrypter:
+        push ecx 
+
+        mov ebx, plainText              ;Puts plainText into ebx
+        add  ebx, ecx                       ;Adds ecx to the address of ebx to point to the address past 
+                                                       ;the last character
+        sub  ebx, 1                             ;When subtracting one from the address, it points to the last character.
+
+        mov edx, key                         ;I do the same thing with the key to get the address of
+        add  edx, ecx                        ;the last character of the key
+        sub  edx, 1
+
+        mov  al, [ebx]                        ;Puts the address of the character into al
+        xor  eax, [edx]                      ;Then xor it with the character from the key.
+        mov  [ebx], al                        ;Then it writes it back into its orginal position in plainText
+
+        pop  ecx                                 ;Then it brings back ecx and loops encrypter until ecx is 0.
+        loop encrypter
+
+        mov  eax, 4
+        mov  ebx, 1
+        mov  ecx, plainText              ;Prints the new encrypted message from inside of plainText
+        mov  edx, plain_Length
+        int  0x80                                
+
+        mov  eax, 4
+        mov  ebx, 1
+        mov  ecx, NewLine              ;Prints a new line
+        mov  edx, 1 
+        int  0x80    
+
+        mov eax, 4
+        mov ebx, 1
+        mov ecx, Decrypt
+        mov edx, decrypt_Length  ;Prints 'Decrypted text: '
+        int 0x80
+
+        mov  ecx, plain_Length       ;number of characters to decrypt
+
+decrypter:                                     ;Decrypter is the same code as encrypter 
+        push ecx                                ;As we can use the same key and xor it, back to
+                                                        ;the original message.
+
+        mov ebx, plainText              
+        add  ebx, ecx                       
+        sub  ebx, 1
+
+        mov edx, key 
+        add  edx, ecx
+        sub  edx, 1
+
+        mov  al, [ebx]                       
+        xor  eax, [edx]
+        mov  [ebx], al
+
+        pop  ecx
+        loop decrypter
+
+        mov  eax, 4
+        mov  ebx, 1
+        mov  ecx, plainText              ;Prints the decrypted message from inside of plainText
+        mov  edx, plain_Length
+        int  0x80                                
+
+        mov  eax, 4
+        mov  ebx, 1
+        mov  ecx, NewLine              ;Prints a new line
+        mov  edx, 1 
+        int  0x80    
+         
+        
+        mov eax,1	
+        int 0x80	
